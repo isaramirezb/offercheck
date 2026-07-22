@@ -1,6 +1,12 @@
 from fastapi import FastAPI
+from pydantic import BaseModel
 
 app = FastAPI()
+
+
+class AnalyzeRequest(BaseModel):
+    resume_text: str
+    target_role: str = "Software Engineer"
 
 
 @app.get("/api/agent/health")
@@ -9,7 +15,7 @@ def health() -> dict:
 
 
 @app.post("/api/agent/analyze")
-def analyze() -> dict:
+def analyze(body: AnalyzeRequest) -> dict:
     return {
         "overall_score": 0,
         "strengths": [],
