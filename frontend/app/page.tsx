@@ -6,8 +6,8 @@ export default function Home() {
           OfferCheck
         </h1>
         <p className="text-lg text-zinc-600 dark:text-zinc-400">
-          Sube tu currículum y recibe feedback especializado para roles de
-          software developer en empresas big tech.
+          Upload your résumé and get specialized feedback for software
+          developer roles at big tech companies.
         </p>
       </main>
     </div>

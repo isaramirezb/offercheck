@@ -1,7 +1,7 @@
 # OfferCheck
 
-Webapp donde subes tu currículum y la IA te da feedback especializado para conseguir un puesto de software developer en empresas big tech.
+A webapp where you upload your résumé and get AI-powered feedback specialized for landing a software developer role at big tech companies.
 
-## Estado
+## Status
 
-Proyecto en fase inicial.
+Early-stage project.
