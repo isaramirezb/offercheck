@@ -1,3 +1,5 @@
 fastapi
 uvicorn
 strands-agents[anthropic]
+upstash-ratelimit
+upstash-redis
