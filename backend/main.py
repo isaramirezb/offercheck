@@ -1,5 +1,7 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
+
+from agent.run import run_agent
 
 app = FastAPI()
 
@@ -16,10 +18,7 @@ def health() -> dict:
 
 @app.post("/api/agent/analyze")
 def analyze(body: AnalyzeRequest) -> dict:
-    return {
-        "overall_score": 0,
-        "strengths": [],
-        "priority_fixes": [],
-        "section_notes": {},
-        "ats_warnings": ["placeholder response — agent not wired up yet"],
-    }
+    try:
+        return run_agent(body.resume_text)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
