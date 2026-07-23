@@ -47,7 +47,7 @@ def run_agent(resume_text: str) -> dict:
     model = AnthropicModel(
         client_args={"api_key": os.environ["ANTHROPIC_API_KEY"]},
         model_id="claude-sonnet-4-6",
-        max_tokens=2048,
+        max_tokens=4096,
     )
 
     agent = Agent(
