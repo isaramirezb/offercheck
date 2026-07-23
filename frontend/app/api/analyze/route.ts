@@ -1,3 +1,5 @@
+export const maxDuration = 60;
+
 import mammoth from "mammoth";
 import { extractText, getDocumentProxy } from "unpdf";
 
