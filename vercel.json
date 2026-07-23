@@ -2,17 +2,9 @@
   "services": {
     "frontend": {
       "root": "frontend/"
-    },
-    "backend": {
-      "root": "backend/",
-      "entrypoint": "main:app",
-      "functions": {
-        "main.py": { "maxDuration": 60 }
-      }
     }
   },
   "rewrites": [
-    { "source": "/api/agent/(.*)", "destination": { "service": "backend" } },
     { "source": "/(.*)", "destination": { "service": "frontend" } }
   ]
 }

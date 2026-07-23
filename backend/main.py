@@ -2,15 +2,22 @@ import os
 import time
 
 from fastapi import FastAPI, HTTPException, Request
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from agent.run import run_agent
 
 app = FastAPI()
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=os.environ.get("ALLOWED_ORIGINS", "http://localhost:3000").split(","),
+    allow_methods=["POST", "GET"],
+    allow_headers=["Content-Type"],
+)
+
 _ratelimit = None
 
-# Comma-separated IPs that bypass rate limiting, e.g. "1.2.3.4,5.6.7.8"
 _ALLOWLISTED_IPS = {
     ip.strip()
     for ip in os.environ.get("RATE_LIMIT_ALLOWLIST", "").split(",")
@@ -26,7 +33,7 @@ def _get_ratelimit():
 
         _ratelimit = Ratelimit(
             redis=Redis.from_env(),
-            limiter=SlidingWindow(max_requests=10, window=86400),  # 10/day per IP
+            limiter=SlidingWindow(max_requests=10, window=86400),
         )
     return _ratelimit
 

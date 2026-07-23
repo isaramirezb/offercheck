@@ -113,7 +113,8 @@ export default function UploadForm() {
         return;
       }
 
-      const res = await fetch("/api/agent/analyze", {
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? "";
+      const res = await fetch(`${backendUrl}/api/agent/analyze`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ resume_text: resumeText, target_role: "Software Engineer" }),
