@@ -85,7 +85,7 @@ export default function UploadForm() {
     if (f) pick(f);
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.SubmitEvent) {
     e.preventDefault();
     if (!file) return;
     setStatus("loading");
@@ -93,19 +93,41 @@ export default function UploadForm() {
     setServerError(null);
     setResult(null);
     try {
-      const body = new FormData();
-      body.append("file", file);
-      const res = await fetch("/api/analyze", { method: "POST", body });
+      const arrayBuffer = await file.arrayBuffer();
+      let resumeText: string;
+
+      if (file.type === "application/pdf") {
+        const { getDocumentProxy, extractText } = await import("unpdf");
+        const pdf = await getDocumentProxy(new Uint8Array(arrayBuffer));
+        const { text } = await extractText(pdf, { mergePages: true });
+        resumeText = text as string;
+      } else {
+        const mammoth = await import("mammoth");
+        const parsed = await mammoth.extractRawText({ arrayBuffer });
+        resumeText = parsed.value;
+      }
+
+      if (!resumeText.trim()) {
+        setServerError("ERR: file appears empty or image-only");
+        setStatus("error");
+        return;
+      }
+
+      const res = await fetch("/api/agent/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ resume_text: resumeText, target_role: "Software Engineer" }),
+      });
       const data = await res.json();
       if (!res.ok) {
-        setServerError(data.error ?? "ERR: something went wrong");
+        setServerError(data.detail ?? data.error ?? "ERR: analysis failed");
         setStatus("error");
         return;
       }
       setResult(data);
       setStatus("done");
     } catch {
-      setServerError("ERR: network failure — check your connection");
+      setServerError("ERR: could not process file — check your connection");
       setStatus("error");
     }
   }
