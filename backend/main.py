@@ -1,6 +1,7 @@
 import os
 import time
 
+from anthropic import Anthropic
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -52,6 +53,10 @@ class AnalyzeRequest(BaseModel):
 
 @app.get("/api/agent/health")
 def health() -> dict:
+    try:
+        Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"]).models.list(limit=1)
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=f"Anthropic API unreachable: {e}")
     return {"status": "ok"}
 
 

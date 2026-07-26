@@ -1,0 +1,13 @@
+name: Backend health check
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check backend + Anthropic key health
+        run: curl --fail --silent --show-error https://offercheck-backend-production.up.railway.app/api/agent/health
