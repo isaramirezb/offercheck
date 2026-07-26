@@ -1,9 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import type { FeedbackResult } from "../types";
 
 const ACCEPTED = ["application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"];
 const MAX_MB = 5;
+const RESULT_STORAGE_KEY = "offercheck_result";
 
 const LOADING_STEPS = [
   "parsing resume...",
@@ -13,40 +16,15 @@ const LOADING_STEPS = [
   "compiling feedback...",
 ];
 
-type Status = "idle" | "loading" | "done" | "error";
-
-interface FeedbackResult {
-  overall_score: number;
-  strengths: string[];
-  priority_fixes: string[];
-  section_notes: Record<string, string>;
-  ats_warnings: string[];
-}
-
-function scoreStyle(score: number) {
-  if (score >= 70) return { text: "text-[#00ff41]", glow: "[text-shadow:0_0_10px_#00ff41]" };
-  if (score >= 40) return { text: "text-amber-400", glow: "[text-shadow:0_0_10px_theme(colors.amber.400)]" };
-  return { text: "text-red-400", glow: "[text-shadow:0_0_10px_theme(colors.red.400)]" };
-}
-
-function ScoreBar({ score }: { score: number }) {
-  const filled = Math.round(score / 10);
-  const empty = 10 - filled;
-  const { text } = scoreStyle(score);
-  return (
-    <span className={`font-mono tracking-widest ${text}`}>
-      {"█".repeat(filled)}{"░".repeat(empty)}
-    </span>
-  );
-}
+type Status = "idle" | "loading" | "error";
 
 export default function UploadForm() {
+  const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
   const [dragging, setDragging] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
   const [status, setStatus] = useState<Status>("idle");
-  const [result, setResult] = useState<FeedbackResult | null>(null);
   const [serverError, setServerError] = useState<string | null>(null);
   const [loadingStep, setLoadingStep] = useState(0);
 
@@ -66,7 +44,6 @@ export default function UploadForm() {
 
   function pick(f: File) {
     setValidationError(null);
-    setResult(null);
     setServerError(null);
     const err = validate(f);
     if (err) { setValidationError(err); setFile(null); return; }
@@ -91,7 +68,6 @@ export default function UploadForm() {
     setStatus("loading");
     setLoadingStep(0);
     setServerError(null);
-    setResult(null);
     try {
       const arrayBuffer = await file.arrayBuffer();
       let resumeText: string;
@@ -125,15 +101,13 @@ export default function UploadForm() {
         setStatus("error");
         return;
       }
-      setResult(data);
-      setStatus("done");
+      sessionStorage.setItem(RESULT_STORAGE_KEY, JSON.stringify(data as FeedbackResult));
+      router.push("/results");
     } catch {
       setServerError("ERR: could not process file — check your connection");
       setStatus("error");
     }
   }
-
-  const sectionEntries = result ? Object.entries(result.section_notes) : [];
 
   return (
     <div className="flex w-full flex-col gap-4">
@@ -199,67 +173,6 @@ export default function UploadForm() {
       {serverError && (
         <p className="border border-red-900 bg-red-950/30 px-4 py-2 text-xs text-red-500 font-mono">{serverError}</p>
       )}
-
-      {status === "done" && result && (
-        <div className="flex flex-col gap-5 border border-[#004400] bg-[#000a00] p-5">
-
-          {/* Score */}
-          <div className="flex flex-col gap-2 border-b border-[#003300] pb-5">
-            <span className="text-xs text-[#004400] uppercase tracking-widest">&gt; overall score</span>
-            <div className="flex items-center justify-between">
-              <ScoreBar score={result.overall_score} />
-              <span className={`text-4xl font-bold tabular-nums ${scoreStyle(result.overall_score).text} ${scoreStyle(result.overall_score).glow}`}>
-                {result.overall_score}
-                <span className="text-base font-normal text-[#004400]">/100</span>
-              </span>
-            </div>
-          </div>
-
-          {/* Sections */}
-          <div className="flex flex-col gap-5">
-            {result.strengths.length > 0 && (
-              <Section title="strengths" items={result.strengths} color="text-[#00ff41]" label="+" />
-            )}
-            {result.priority_fixes.length > 0 && (
-              <Section title="priority fixes" items={result.priority_fixes} color="text-red-400" label="!" />
-            )}
-            {result.ats_warnings.length > 0 && (
-              <Section title="ats warnings" items={result.ats_warnings} color="text-amber-400" label="~" />
-            )}
-            {sectionEntries.length > 0 && (
-              <div className="flex flex-col gap-3">
-                <span className="text-xs text-[#004400] uppercase tracking-widest">&gt; section notes</span>
-                {sectionEntries.map(([section, note]) => (
-                  <div key={section} className="border-l-2 border-[#003300] pl-3 flex flex-col gap-1">
-                    <span className="text-xs text-[#00b300] uppercase tracking-wide">{section}</span>
-                    <span className="text-xs text-[#00ff41]/70 leading-relaxed">{note}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function Section({ title, items, color, label }: {
-  title: string;
-  items: string[];
-  color: string;
-  label: string;
-}) {
-  return (
-    <div className="flex flex-col gap-2">
-      <span className="text-xs text-[#004400] uppercase tracking-widest">&gt; {title}</span>
-      <ul className="flex flex-col gap-1.5 pl-3">
-        {items.map((item, i) => (
-          <li key={i} className={`text-xs leading-relaxed ${color}`}>
-            [{label}] {item}
-          </li>
-        ))}
-      </ul>
     </div>
   );
 }

@@ -2,7 +2,8 @@ import UploadForm from "./components/UploadForm";
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-black px-6 py-16">
+    <div className="crt flex min-h-screen flex-col items-center justify-center bg-black px-6 py-16">
+      <div className="scanlines" />
       <main className="flex w-full max-w-xl flex-col gap-8">
         {/* Header */}
         <div className="flex flex-col gap-3">

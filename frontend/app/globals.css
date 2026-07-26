@@ -16,12 +16,16 @@
 
 body {
   background: var(--background);
+  color: #e5e5e5;
+}
+
+/* CRT terminal theme, scoped to the landing page only */
+.crt {
   color: var(--foreground);
   font-family: var(--font-geist-mono), monospace;
 }
 
-/* Scanlines overlay */
-body::before {
+.crt .scanlines {
   content: "";
   position: fixed;
   inset: 0;
